@@ -20,9 +20,14 @@
                     "Ref": "AppVPC"
                 },
                 "CidrBlock": "10.0.1.0/24",
-                "AvailabilityZone" : "us-east-1a",
-                "MapPublicIpOnLaunch" : true,
-                "Tags" : [ { "Key" : "Name", "Value" : "PublicSubnetA" } ]
+                "AvailabilityZone": "us-east-1a",
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "PublicSubnetA"
+                    }
+                ]
             }
         },
         "PublicSubnetB": {
@@ -35,9 +40,14 @@
                     "Ref": "AppVPC"
                 },
                 "CidrBlock": "10.0.2.0/24",
-                "AvailabilityZone" : "us-east-1b",
-                "MapPublicIpOnLaunch" : true,
-                "Tags" : [ { "Key" : "Name", "Value" : "PublicSubnetB" } ]
+                "AvailabilityZone": "us-east-1b",
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "PublicSubnetB"
+                    }
+                ]
             }
         },
         "InternetGateway": {
@@ -112,8 +122,13 @@
                     "Ref": "AppVPC"
                 },
                 "CidrBlock": "10.0.101.0/24",
-                "AvailabilityZone" : "us-east-1a",
-                "Tags" : [ { "Key" : "Name", "Value" : "PrivateSubnetA" } ]
+                "AvailabilityZone": "us-east-1a",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "PrivateSubnetA"
+                    }
+                ]
             }
         },
         "PrivateSubnetB": {
@@ -126,28 +141,47 @@
                     "Ref": "AppVPC"
                 },
                 "CidrBlock": "10.0.102.0/24",
-                "AvailabilityZone" : "us-east-1b",
-                "Tags" : [ { "Key" : "Name", "Value" : "PrivateSubnetB" } ]
+                "AvailabilityZone": "us-east-1b",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "PrivateSubnetB"
+                    }
+                ]
             }
         },
-        "NatGatewayEIP" : {
-            "Type" : "AWS::EC2::EIP",
-            "Properties" : {
-                "Domain" : "vpc",
-                "Tags" : [ {"Key" : "Name", "Value" : "NatGatewayEIP" } ]
+        "NatGatewayEIP": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "NatGatewayEIP"
+                    }
+                ]
             }
-          },
+        },
         "NatGateway": {
-            "Type" : "AWS::EC2::NatGateway",
-            "Properties" : {
-                "AllocationId" : {"Fn::GetAtt": [
-                    "NatGatewayEIP",
-                    "AllocationId"
-                ]},
-                "SubnetId" : { "Ref" : "PublicSubnetA"},
-                "Tags" : [ {"Key" : "Name", "Value" : "NatGateway" } ]
-              }
-          },
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {
+                    "Fn::GetAtt": [
+                        "NatGatewayEIP",
+                        "AllocationId"
+                    ]
+                },
+                "SubnetId": {
+                    "Ref": "PublicSubnetA"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "NatGateway"
+                    }
+                ]
+            }
+        },
         "PrivateRouteTable": {
             "Type": "AWS::EC2::RouteTable",
             "Properties": {

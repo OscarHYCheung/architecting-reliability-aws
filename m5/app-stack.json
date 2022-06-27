@@ -68,23 +68,47 @@
         }
     },
     "Resources": {
-        "NetworkStack" : {
-            "Type" : "AWS::CloudFormation::Stack",
-            "Properties" : {
-               "TemplateURL" : {
-                   "Ref": "NetworkStackTemplateURL"
-               }
+        "NetworkStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {
+                    "Ref": "NetworkStackTemplateURL"
+                }
             }
-         },
+        },
         "WebTierLoadBalancer": {
             "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
             "Properties": {
-                "Name": { "Fn::Join": ["", [ "webtier-", { "Ref": "AWS::StackName" }]]},
+                "Name": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "webtier-",
+                            {
+                                "Ref": "AWS::StackName"
+                            }
+                        ]
+                    ]
+                },
                 "Subnets": [
-                    { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnetAID" ] },
-                    { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnetBID" ] }
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PublicSubnetAID"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PublicSubnetBID"
+                        ]
+                    }
                 ],
-                "SecurityGroups": [ { "Ref" : "WebserverSecurityGroup" } ]
+                "SecurityGroups": [
+                    {
+                        "Ref": "WebserverSecurityGroup"
+                    }
+                ]
             }
         },
         "WebTierALBListener": {
@@ -103,17 +127,24 @@
                 },
                 "Port": "443",
                 "Protocol": "HTTPS",
-                "Certificates": [{
-                    "CertificateArn" : {
-                        "Ref": "ALBCertificateArn"
+                "Certificates": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "ALBCertificateArn"
+                        }
                     }
-                }]
+                ]
             }
         },
         "WebTierALBTargetGroup": {
             "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
             "Properties": {
-                "VpcId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.VPCID" ] },
+                "VpcId": {
+                    "Fn::GetAtt": [
+                        "NetworkStack",
+                        "Outputs.VPCID"
+                    ]
+                },
                 "HealthCheckIntervalSeconds": 10,
                 "HealthCheckTimeoutSeconds": 5,
                 "HealthyThresholdCount": 2,
@@ -121,9 +152,9 @@
                 "Protocol": "HTTP",
                 "UnhealthyThresholdCount": 5,
                 "TargetGroupAttributes": [
-                   {
-                       "Key": "deregistration_delay.timeout_seconds",
-                       "Value": "20"
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": "20"
                     },
                     {
                         "Key": "stickiness.enabled",
@@ -144,13 +175,25 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Properties": {
                 "VPCZoneIdentifier": [
-                    { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnetAID" ] },
-                    { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnetBID" ] }
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PublicSubnetAID"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PublicSubnetBID"
+                        ]
+                    }
                 ],
                 "LaunchTemplate": {
-                    "LaunchTemplateId" : { "Ref": "WebserverLaunchTemplate" },
-                    "Version" : "1"
-                  },
+                    "LaunchTemplateId": {
+                        "Ref": "WebserverLaunchTemplate"
+                    },
+                    "Version": "1"
+                },
                 "MinSize": "2",
                 "MaxSize": "4",
                 "DesiredCapacity": {
@@ -162,7 +205,7 @@
                     }
                 ],
                 "HealthCheckType": "ELB",
-                "HealthCheckGracePeriod":300
+                "HealthCheckGracePeriod": 300
             },
             "CreationPolicy": {
                 "ResourceSignal": {
@@ -186,7 +229,7 @@
             "Metadata": {
                 "Comment1": "Configure the web server launch template"
             },
-            "Properties": {                
+            "Properties": {
                 "LaunchTemplateData": {
                     "ImageId": "ami-01d025118d8e760db",
                     "InstanceType": {
@@ -208,11 +251,19 @@
                                     "#!/bin/bash\n",
                                     "sudo yum -y install docker aws-cfn-bootstrap\n",
                                     "sudo service docker start\n",
-                                    "sudo docker run -d -p 80:80 -e APPSERVER='http://", {"Fn::GetAtt": [
-                                        "AppTierLoadBalancer",
-                                        "DNSName"
-                                    ]}, ":8080' benpiper/mtwa:web\n",
-                                    "/opt/aws/bin/cfn-signal -e 0 --stack ", { "Ref": "AWS::StackName" }," --resource WebserverGroup\n"
+                                    "sudo docker run -d -p 80:80 -e APPSERVER='http://",
+                                    {
+                                        "Fn::GetAtt": [
+                                            "AppTierLoadBalancer",
+                                            "DNSName"
+                                        ]
+                                    },
+                                    ":8080' benpiper/mtwa:web\n",
+                                    "/opt/aws/bin/cfn-signal -e 0 --stack ",
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    " --resource WebserverGroup\n"
                                 ]
                             ]
                         }
@@ -221,198 +272,256 @@
             }
         },
         "WebTierAutoScalingPolicy": {
-            "Type":"AWS::AutoScaling::ScalingPolicy",
-            "Properties":{
-              "AutoScalingGroupName":{
-                "Ref":"WebserverGroup"
-              },
-              "PolicyType":"TargetTrackingScaling",
-              "TargetTrackingConfiguration":{
-                "PredefinedMetricSpecification":{
-                  "PredefinedMetricType":"ASGAverageCPUUtilization"
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AutoScalingGroupName": {
+                    "Ref": "WebserverGroup"
                 },
-                "TargetValue": "75"
-                }
-              }
-            },
-        "WebserverSecurityGroup" : {
-            "Type" : "AWS::EC2::SecurityGroup",
-            "Properties" : {
-              "GroupDescription" : "Web server security group",
-              "SecurityGroupIngress": [
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "80",
-                    "ToPort": "80",
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "443",
-                    "ToPort": "443",
-                    "CidrIp": "0.0.0.0/0"
-                },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "22",
-                    "ToPort": "22",
-                    "CidrIp": {
-                        "Ref": "SSHLocation"
-                    }
-                }
-            ],
-              "VpcId": {
-                "Fn::GetAtt" : [ "NetworkStack", "Outputs.VPCID" ] }
-              }
-            },
-            "AppTierLoadBalancer": {
-                "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
-                "Properties": {
-                    "Name": { "Fn::Join": ["", [ "apptier-", { "Ref": "AWS::StackName" }]]},
-                    "Scheme": "internal",
-                    "Subnets": [
-                        { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetAID" ] },
-                        { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetBID" ] }
-                    ],
-                    "SecurityGroups": [ {"Ref" : "AppserverSecurityGroup" } ]
-                }
-            },
-            "AppTierALBListener": {
-                "Type": "AWS::ElasticLoadBalancingV2::Listener",
-                "Properties": {
-                    "DefaultActions": [
-                        {
-                            "Type": "forward",
-                            "TargetGroupArn": {
-                                "Ref": "AppTierALBTargetGroup"
-                            }
-                        }
-                    ],
-                    "LoadBalancerArn": {
-                        "Ref": "AppTierLoadBalancer"
+                "PolicyType": "TargetTrackingScaling",
+                "TargetTrackingConfiguration": {
+                    "PredefinedMetricSpecification": {
+                        "PredefinedMetricType": "ASGAverageCPUUtilization"
                     },
-                    "Port": "8080",
-                    "Protocol": "HTTP"
+                    "TargetValue": "75"
                 }
-            },
-            "AppTierALBTargetGroup": {
-                "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-                "Properties": {
-                    "VpcId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.VPCID" ] },
-                    "HealthCheckIntervalSeconds": 10,
-                    "HealthCheckTimeoutSeconds": 5,
-                    "HealthyThresholdCount": 2,
-                    "Port": 8080,
-                    "Protocol": "HTTP",
-                    "UnhealthyThresholdCount": 5,
-                    "TargetGroupAttributes": [
-                       {
-                           "Key": "deregistration_delay.timeout_seconds",
-                           "Value": "20"
-                        },
-                        {
-                            "Key": "stickiness.enabled",
-                            "Value": "true"
-                        },
-                        {
-                            "Key": "stickiness.type",
-                            "Value": "lb_cookie"
-                        },
-                        {
-                            "Key": "stickiness.lb_cookie.duration_seconds",
-                            "Value": "30"
+            }
+        },
+        "WebserverSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Web server security group",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "443",
+                        "ToPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
                         }
+                    }
+                ],
+                "VpcId": {
+                    "Fn::GetAtt": [
+                        "NetworkStack",
+                        "Outputs.VPCID"
                     ]
                 }
-            },
-            "AppserverGroup": {
-                "Type": "AWS::AutoScaling::AutoScalingGroup",
-                "Properties": {
-                    "VPCZoneIdentifier": [
-                        { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetAID" ] },
-                        { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetBID" ] }
-                    ],
-                    "LaunchTemplate": {
-                        "LaunchTemplateId" : { "Ref": "AppserverLaunchTemplate" },
-                        "Version" : "1"
-                      },
-                    "MinSize": "1",
-                    "MaxSize": "2",
-                    "DesiredCapacity": {
-                        "Ref": "AppserverCapacity"
+            }
+        },
+        "AppTierLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Name": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "apptier-",
+                            {
+                                "Ref": "AWS::StackName"
+                            }
+                        ]
+                    ]
+                },
+                "Scheme": "internal",
+                "Subnets": [
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PrivateSubnetAID"
+                        ]
                     },
-                    "TargetGroupARNs": [
-                        {
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PrivateSubnetBID"
+                        ]
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "AppserverSecurityGroup"
+                    }
+                ]
+            }
+        },
+        "AppTierALBListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": {
                             "Ref": "AppTierALBTargetGroup"
                         }
-                    ],
-                    "HealthCheckType": "ELB",
-                    "HealthCheckGracePeriod":300
-                },
-                "UpdatePolicy": {
-                    "AutoScalingRollingUpdate": {
-                        "MinInstancesInService": "1",
-                        "MaxBatchSize": "1",
-                        "PauseTime": "PT15M",
-                        "WaitOnResourceSignals": "true"
                     }
-                }
-            },
-            "AppserverLaunchTemplate": {
-                "Type": "AWS::EC2::LaunchTemplate",
-                "Metadata": {
-                    "Comment1": "Configure the app server launch template"
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "AppTierLoadBalancer"
                 },
-                "Properties": {
-                    "LaunchTemplateData": {
-                        "ImageId": "ami-01d025118d8e760db",
-                        "InstanceType": {
-                            "Ref": "AppTierInstanceType"
-                        },
-                        "SecurityGroupIds": [
-                            {
-                                "Ref": "AppserverSecurityGroup"
-                            }
-                        ],
-                        "KeyName": {
-                            "Ref": "KeyName"
-                        },
-                        "UserData": {
-                            "Fn::Base64": {
-                                "Fn::Join": [
-                                    "",
-                                    [
-                                        "#!/bin/bash\n",
-                                        "sudo yum -y install docker aws-cfn-bootstrap\n",
-                                        "sudo service docker start\n",
-                                        "sudo docker run -d -p 8080:8080 benpiper/mtwa:app\n",
-                                        "/opt/aws/bin/cfn-signal -e 0 --stack ", { "Ref": "AWS::StackName" }," --resource AppserverGroup\n"
-                                    ]
+                "Port": "8080",
+                "Protocol": "HTTP"
+            }
+        },
+        "AppTierALBTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "VpcId": {
+                    "Fn::GetAtt": [
+                        "NetworkStack",
+                        "Outputs.VPCID"
+                    ]
+                },
+                "HealthCheckIntervalSeconds": 10,
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 2,
+                "Port": 8080,
+                "Protocol": "HTTP",
+                "UnhealthyThresholdCount": 5,
+                "TargetGroupAttributes": [
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": "20"
+                    },
+                    {
+                        "Key": "stickiness.enabled",
+                        "Value": "true"
+                    },
+                    {
+                        "Key": "stickiness.type",
+                        "Value": "lb_cookie"
+                    },
+                    {
+                        "Key": "stickiness.lb_cookie.duration_seconds",
+                        "Value": "30"
+                    }
+                ]
+            }
+        },
+        "AppserverGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "VPCZoneIdentifier": [
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PrivateSubnetAID"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "NetworkStack",
+                            "Outputs.PrivateSubnetBID"
+                        ]
+                    }
+                ],
+                "LaunchTemplate": {
+                    "LaunchTemplateId": {
+                        "Ref": "AppserverLaunchTemplate"
+                    },
+                    "Version": "1"
+                },
+                "MinSize": "1",
+                "MaxSize": "2",
+                "DesiredCapacity": {
+                    "Ref": "AppserverCapacity"
+                },
+                "TargetGroupARNs": [
+                    {
+                        "Ref": "AppTierALBTargetGroup"
+                    }
+                ],
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": 300
+            },
+            "UpdatePolicy": {
+                "AutoScalingRollingUpdate": {
+                    "MinInstancesInService": "1",
+                    "MaxBatchSize": "1",
+                    "PauseTime": "PT15M",
+                    "WaitOnResourceSignals": "true"
+                }
+            }
+        },
+        "AppserverLaunchTemplate": {
+            "Type": "AWS::EC2::LaunchTemplate",
+            "Metadata": {
+                "Comment1": "Configure the app server launch template"
+            },
+            "Properties": {
+                "LaunchTemplateData": {
+                    "ImageId": "ami-01d025118d8e760db",
+                    "InstanceType": {
+                        "Ref": "AppTierInstanceType"
+                    },
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "AppserverSecurityGroup"
+                        }
+                    ],
+                    "KeyName": {
+                        "Ref": "KeyName"
+                    },
+                    "UserData": {
+                        "Fn::Base64": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "#!/bin/bash\n",
+                                    "sudo yum -y install docker aws-cfn-bootstrap\n",
+                                    "sudo service docker start\n",
+                                    "sudo docker run -d -p 8080:8080 benpiper/mtwa:app\n",
+                                    "/opt/aws/bin/cfn-signal -e 0 --stack ",
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    " --resource AppserverGroup\n"
                                 ]
-                            }
+                            ]
                         }
                     }
                 }
-            },
-            "AppserverSecurityGroup" : {
-                "Type" : "AWS::EC2::SecurityGroup",
-                "Properties" : {
-                  "GroupDescription" : "App server security group",
-                  "VpcId": {
-                    "Fn::GetAtt" : [ "NetworkStack", "Outputs.VPCID" ] }
-                  }
-                },
-            "AppserverSecurityGroupIngress": {
-                "Type": "AWS::EC2::SecurityGroupIngress",
-                "Properties": {
-                    "IpProtocol": "tcp",
-                    "FromPort": "8080",
-                    "ToPort": "8080",
-                    "CidrIp": "0.0.0.0/0",
-                    "GroupId": { "Fn::GetAtt": [ "AppserverSecurityGroup", "GroupId" ] }
-                    }
+            }
+        },
+        "AppserverSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "App server security group",
+                "VpcId": {
+                    "Fn::GetAtt": [
+                        "NetworkStack",
+                        "Outputs.VPCID"
+                    ]
                 }
-},
+            }
+        },
+        "AppserverSecurityGroupIngress": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "IpProtocol": "tcp",
+                "FromPort": "8080",
+                "ToPort": "8080",
+                "CidrIp": "0.0.0.0/0",
+                "GroupId": {
+                    "Fn::GetAtt": [
+                        "AppserverSecurityGroup",
+                        "GroupId"
+                    ]
+                }
+            }
+        }
+    },
     "Outputs": {
         "WebsiteURL": {
             "Description": "URL for public ALB",
